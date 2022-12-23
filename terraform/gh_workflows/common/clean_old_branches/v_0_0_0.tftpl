@@ -1,0 +1,36 @@
+name: ${workflow_title}
+
+# Created using the template "${template}" in ohpensource-repo-provisioning repository
+%{if overwrite_on_changes ~}
+# File ruled by ohpensource-repo-provisioning repository. If you want to modify this workflow update the template or the inputs there and deploy it.
+%{ endif ~}
+
+on:
+%{if can(triggers.workflow_dispatch) ~}  
+  workflow_dispatch:
+%{ endif ~}
+%{if can(triggers.schedule) ~}
+  schedule:
+  %{ for cron in triggers.schedule ~}
+    - cron: '${cron}'
+  %{ endfor ~}
+%{ endif ~}
+
+jobs:
+  housekeeping:
+    name: Cleanup old branches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Run delete-old-branches-action
+        uses: pixel-systems/delete-stale-branch-gh-action@v0.0.1
+        with:
+          repo_token: $${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN }}
+          date: '${inputs.date}'
+          dry_run: ${inputs.dry_run}
+          delete_tags: ${inputs.delete_tags}
+          minimum_tags: ${inputs.minimum_tags}
+          extra_protected_branch_regex: ${inputs.extra_protected_branch_regex}
+          extra_protected_tag_regex: '${inputs.extra_protected_tag_regex}'
+          exclude_open_pr_branches: ${inputs.exclude_open_pr_branches}

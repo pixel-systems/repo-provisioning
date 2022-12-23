@@ -1,0 +1,8 @@
+      - name: terraform docs security
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          find-dir: "TERRAFORM_FOLDER_PLACEHOLDER"
+          git-commit-message: "[tfm-docs][skip ci] - updating terraform docs"
+          output-file: README.md
+          output-method: inject
+          git-push: "true"

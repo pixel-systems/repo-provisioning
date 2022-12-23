@@ -1,0 +1,7 @@
+  # make sure the next name is in the branch_protection.checks_list in your repo tfvars in the ohpensource-repo-provisioning
+  tf-validate-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aquasecurity/tfsec-action@v1.0.2
+        name: analyse-security

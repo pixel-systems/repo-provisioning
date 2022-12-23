@@ -1,0 +1,87 @@
+name: continuous-integration
+
+on:
+  pull_request:
+    branches: ["main"]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.TERRAFORM_GITHUB_TOKEN }}
+
+  COR_AWS_ACCESS_KEY_ID: ${{ secrets.COR_CICD_AUTOMATION_AWS_ACCESS_KEY_ID }}
+  COR_AWS_SECRET_ACCESS_KEY: ${{ secrets.COR_CICD_AUTOMATION_AWS_SECRET_ACCESS_KEY }}
+  REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  mandatory-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: pixel-systems/conventional-commits-gh-action@v0.0.1
+        with:
+          settings-file: repo-config.json
+      - name: Ensure Jira ticket in all commits
+        uses: pixel-systems/ensure-commits-have-ticket-gh-action@v0.0.1
+        with:
+          base-branch: $GITHUB_BASE_REF
+          pr-branch: $GITHUB_HEAD_REF
+      - name: Validate terraform
+        uses: pixel-systems/terraform-validate-gh-action/action@v0.0.1
+        with:
+          terraform-folder: "terraform"
+          use-backend: "false"
+
+  get-repos-changed:
+    name: get-repos-changed
+    runs-on: ubuntu-latest
+    needs: mandatory-checks
+    outputs:
+      repos_modified: ${{ steps.get-repos.outputs.repos_modified }}
+    steps:
+      - name: Checkout the repository
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v2
+        id: get-changed-files
+        with:
+          list-files: shell
+          filters: |
+            repos:
+              - added|modified: "repos/*/*.tfvars"
+            terraform: 
+              - "terraform/**"
+      - name: Get repos Modified
+        id: get-repos
+        run: |
+          export repos_modified="${{ steps.get-changed-files.outputs.repos }}"
+          export repos_files="${{ steps.get-changed-files.outputs.repos_files }}"
+          export terraform_changed="${{ steps.get-changed-files.outputs.terraform }}"
+          ./scripts/detect-changes.sh
+
+  tfm-plan:
+    name: tfm-plan
+    runs-on: ubuntu-latest
+    needs: get-repos-changed
+    if: needs.get-repos-changed.outputs.repos_modified != 'none'
+    strategy:
+      matrix: ${{ fromJSON( needs.get-repos-changed.outputs.repos_modified ) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pixel-systems/terraform-plan-gh-action@v0.0.1
+        id: tf-plan
+        name: terraform plan
+        env:
+          BACKEND_FILE: "./repos/${{ matrix.repos }}/backend.tfvars"
+          TF_VARS_FILE: "./repos/${{ matrix.repos }}/resources.tfvars"
+          TF_VAR_service_version: "N/A"
+        with:
+          region: $REGION
+          access-key: $COR_AWS_ACCESS_KEY_ID
+          secret-key: $COR_AWS_SECRET_ACCESS_KEY
+          terraform-folder: "terraform"
+          backend-configuration: "$BACKEND_FILE"
+          terraform-var-file: "$TF_VARS_FILE"
+          terraform-plan-file: "terraform/tfplan"

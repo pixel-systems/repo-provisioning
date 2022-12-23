@@ -1,0 +1,115 @@
+name: continuous-delivery
+
+on:
+  push:
+    branches: [main]
+
+env:
+  GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_APP_PEM_FILE }}
+  GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_APP_ID }}
+  GITHUB_APP_INSTALLATION_ID: ${{ secrets.TERRAFORM_GITHUB_APP_INSTALLATION_ID }}
+
+  COR_AWS_ACCESS_KEY_ID: ${{ secrets.COR_CICD_AUTOMATION_AWS_ACCESS_KEY_ID }}
+  COR_AWS_SECRET_ACCESS_KEY: ${{ secrets.COR_CICD_AUTOMATION_AWS_SECRET_ACCESS_KEY }}
+  REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+
+  tfm-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN }}
+      - name: Render terraform docs inside the USAGE.md and push changes back to PR branch
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          find-dir: terraform/
+          git-commit-message: "docs: updating terraform docs. [skip ci]"
+          output-method: inject
+          git-push: "true"
+
+  semver-changelog:
+    runs-on: ubuntu-latest
+    needs: tfm-docs
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN }}
+          ref: main
+      - uses: ohpensource/generate-version-and-release-notes-gh-action@v1.1.2
+        name: semver & changelog
+        with:
+          user-name: "GitHub Actions"
+          user-email: "github-svc@ohpen.com"
+          skip-git-commit: "false"
+          version-prefix: ""
+          settings-file: repo-config.json
+
+  get-repos-changed:
+    name: get-repos-changed
+    runs-on: ubuntu-latest
+    outputs:
+      repos_modified: ${{ steps.get-repos.outputs.repos_modified }}
+    steps:
+      - name: Checkout the repository
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v2
+        id: get-changed-files
+        with:
+          list-files: shell
+          filters: |
+            repos:
+              - added|modified: "repos/*/*.tfvars"
+            terraform:
+              - added|modified: "terraform/**"
+      - name: Get repos Modified
+        id: get-repos
+        run: |
+          export repos_modified="${{ steps.get-changed-files.outputs.repos }}"
+          export repos_files="${{ steps.get-changed-files.outputs.repos_files }}"
+          export terraform_changed="${{ steps.get-changed-files.outputs.terraform }}"
+          ./scripts/detect-changes.sh
+
+  tfm-apply:
+    name: tfm-apply
+    runs-on: ubuntu-latest
+    needs: get-repos-changed
+    if: needs.get-repos-changed.outputs.repos_modified != 'none'
+    strategy:
+      matrix: ${{ fromJSON( needs.get-repos-changed.outputs.repos_modified ) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ohpensource/terraform-plan-gh-action@0.1.1.0
+        name: terraform plan
+        env:
+          BACKEND_FILE: "./repos/${{ matrix.repos }}/backend.tfvars"
+          TF_VARS_FILE: "./repos/${{ matrix.repos }}/resources.tfvars"
+        with:
+          region: $REGION
+          access-key: $COR_AWS_ACCESS_KEY_ID
+          secret-key: $COR_AWS_SECRET_ACCESS_KEY
+          terraform-folder: "terraform"
+          backend-configuration: "$BACKEND_FILE"
+          terraform-var-file: "$TF_VARS_FILE"
+          terraform-plan-file: "terraform/tfplan"
+      - uses: ohpensource/terraform-apply-gh-action/action@0.0.0.1
+        name: terraform apply
+        env:
+          BACKEND_FILE: "./repos/${{ matrix.repos }}/backend.tfvars"
+          TF_VARS_FILE: "./repos/${{ matrix.repos }}/resources.tfvars"
+        with:
+          region: $REGION
+          access-key: $COR_AWS_ACCESS_KEY_ID
+          secret-key: $COR_AWS_SECRET_ACCESS_KEY
+          terraform-folder: "terraform"
+          backend-configuration: "$BACKEND_FILE"
+          terraform-plan-file: "terraform/tfplan"
+          terraform-outputs-file: "terraform/outputs.json"

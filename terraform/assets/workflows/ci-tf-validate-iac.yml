@@ -1,0 +1,10 @@
+  # make sure the next name is in the branch_protection.checks_list in your repo tfvars in the ohpensource-repo-provisioning
+  tf-validate-iac:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pixel-systems/terraform-validate-gh-action/action@v0.0.1
+        name: validate-terraform
+        with:
+          terraform-folder: "TERRAFORM_FOLDER_PLACEHOLDER"
+          use-backend: "false"

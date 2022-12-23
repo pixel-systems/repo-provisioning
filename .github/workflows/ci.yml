@@ -7,8 +7,8 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.TERRAFORM_GITHUB_TOKEN }}
 
-  COR_AWS_ACCESS_KEY_ID: ${{ secrets.COR_CICD_AUTOMATION_AWS_ACCESS_KEY_ID }}
-  COR_AWS_SECRET_ACCESS_KEY: ${{ secrets.COR_CICD_AUTOMATION_AWS_SECRET_ACCESS_KEY }}
+  PIXEL_CORE_AWS_ACCESS_KEY_ID: ${{ secrets.PIXEL_CORE_GITHUB_AWS_ACCESS_KEY_ID }}
+  PIXEL_CORE_AWS_SECRET_ACCESS_KEY: ${{ secrets.PIXEL_CORE_GITHUB_AWS_SECRET_ACCESS_KEY }}
   REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
           base-branch: $GITHUB_BASE_REF
           pr-branch: $GITHUB_HEAD_REF
       - name: Validate terraform
-        uses: pixel-systems/terraform-validate-gh-action/action@v0.0.1
+        uses: pixel-systems/tfm-validate-gh-action@v0.0.1
         with:
           terraform-folder: "terraform"
           use-backend: "false"
@@ -70,7 +70,8 @@ jobs:
       matrix: ${{ fromJSON( needs.get-repos-changed.outputs.repos_modified ) }}
     steps:
       - uses: actions/checkout@v3
-      - uses: pixel-systems/terraform-plan-gh-action@v0.0.1
+  
+      - uses: pixel-systems/tfm-plan-gh-action@PIXEL-tfm-cloud
         id: tf-plan
         name: terraform plan
         env:
@@ -79,9 +80,10 @@ jobs:
           TF_VAR_service_version: "N/A"
         with:
           region: $REGION
-          access-key: $COR_AWS_ACCESS_KEY_ID
-          secret-key: $COR_AWS_SECRET_ACCESS_KEY
+          access-key: $PIXEL_CORE_AWS_ACCESS_KEY_ID
+          secret-key: $PIXEL_CORE_AWS_SECRET_ACCESS_KEY
           terraform-folder: "terraform"
           backend-configuration: "$BACKEND_FILE"
           terraform-var-file: "$TF_VARS_FILE"
           terraform-plan-file: "terraform/tfplan"
+

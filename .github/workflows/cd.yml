@@ -5,48 +5,12 @@ on:
     branches: [main]
 
 env:
-  # GITHUB_TOKEN: ${{ secrets.TERRAFORM_GITHUB_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN}}
   PIXEL_CORE_AWS_ACCESS_KEY_ID: ${{ secrets.PIXEL_CORE_GITHUB_AWS_ACCESS_KEY_ID }}
   PIXEL_CORE_AWS_SECRET_ACCESS_KEY: ${{ secrets.PIXEL_CORE_GITHUB_AWS_SECRET_ACCESS_KEY }}
   REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
-
-  tfm-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        id: checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          token: $GITHUB_TOKEN
-      - name: Render terraform docs inside the USAGE.md and push changes back to PR branch
-        uses: terraform-docs/gh-actions@v1.0.0
-        with:
-          find-dir: terraform/
-          git-commit-message: "docs: updating terraform docs. [skip ci]"
-          output-method: inject
-          git-push: "true"
-
-  semver-changelog:
-    runs-on: ubuntu-latest
-    needs: tfm-docs
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          token: $GITHUB_TOKEN
-          ref: main
-      - uses: ohpensource/generate-version-and-release-notes-gh-action@v1.1.2
-        name: semver & changelog
-        with:
-          user-name: "GitHub Actions"
-          user-email: "github-svc@opixelsystems.sk"
-          skip-git-commit: "false"
-          version-prefix: ""
-          settings-file: repo-config.json
 
   get-repos-changed:
     name: get-repos-changed

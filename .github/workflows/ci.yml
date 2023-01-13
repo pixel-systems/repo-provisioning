@@ -68,6 +68,7 @@ jobs:
     if: needs.get-repos-changed.outputs.repos_modified != 'none'
     strategy:
       matrix: ${{ fromJSON( needs.get-repos-changed.outputs.repos_modified ) }}
+      fail-fast: false
     steps:
       - uses: actions/checkout@v3
   

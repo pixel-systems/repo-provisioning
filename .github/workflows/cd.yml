@@ -5,8 +5,8 @@ on:
     branches: [main]
 
 env:
-  GITHUB_TOKEN: ${{ secrets.TERRAFORM_GITHUB_TOKEN }}
-
+  # GITHUB_TOKEN: ${{ secrets.TERRAFORM_GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN}}
   PIXEL_CORE_AWS_ACCESS_KEY_ID: ${{ secrets.PIXEL_CORE_GITHUB_AWS_ACCESS_KEY_ID }}
   PIXEL_CORE_AWS_SECRET_ACCESS_KEY: ${{ secrets.PIXEL_CORE_GITHUB_AWS_SECRET_ACCESS_KEY }}
   REGION: ${{ secrets.AWS_REGION }}
@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: ${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN }}
+          token: $GITHUB_TOKEN
       - name: Render terraform docs inside the USAGE.md and push changes back to PR branch
         uses: terraform-docs/gh-actions@v1.0.0
         with:
@@ -37,13 +37,13 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: ${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN }}
+          token: $GITHUB_TOKEN
           ref: main
       - uses: ohpensource/generate-version-and-release-notes-gh-action@v1.1.2
         name: semver & changelog
         with:
           user-name: "GitHub Actions"
-          user-email: "github-svc@ohpen.com"
+          user-email: "github-svc@opixelsystems.sk"
           skip-git-commit: "false"
           version-prefix: ""
           settings-file: repo-config.json
@@ -92,8 +92,8 @@ jobs:
           TF_VARS_FILE: "./repos/${{ matrix.repos }}/resources.tfvars"
         with:
           region: $REGION
-          access-key: $PIXEL_CORE_GITHUB_AWS_ACCESS_KEY_ID
-          secret-key: $PIXEL_CORE_GITHUB_AWS_SECRET_ACCESS_KEY
+          access-key: $PIXEL_CORE_AWS_ACCESS_KEY_ID
+          secret-key: $PIXEL_CORE_AWS_SECRET_ACCESS_KEY
           terraform-folder: "terraform"
           backend-configuration: "$BACKEND_FILE"
           terraform-var-file: "$TF_VARS_FILE"
@@ -105,8 +105,8 @@ jobs:
           TF_VARS_FILE: "./repos/${{ matrix.repos }}/resources.tfvars"
         with:
           region: $REGION
-          access-key: $PIXEL_CORE_GITHUB_AWS_ACCESS_KEY_ID
-          secret-key: $PIXEL_CORE_GITHUB_AWS_SECRET_ACCESS_KEY
+          access-key: $PIXEL_CORE_AWS_ACCESS_KEY_ID
+          secret-key: $PIXEL_CORE_AWS_SECRET_ACCESS_KEY
           terraform-folder: "terraform"
           backend-configuration: "$BACKEND_FILE"
           terraform-plan-file: "terraform/tfplan"

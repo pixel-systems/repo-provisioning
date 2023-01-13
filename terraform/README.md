@@ -29,16 +29,12 @@ No modules.
 | [github_repository_file.codeowners_file](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | resource |
 | [github_repository_file.workflow_files](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | resource |
 | [github_repository_file.workflow_ruled](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | resource |
-| [github_team_repository.admins_team](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_repository) | resource |
-| [github_team_repository.developers](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_repository) | resource |
-| [github_team.devs](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/team) | data source |
-| [github_team.platform](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/team) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_add_cd_workflow"></a> [add\_cd\_workflow](#input\_add\_cd\_workflow) | Add cd.yml with the ohpensource/generate-version-and-release-notes-gh-action step | `any` | <pre>{<br>  "semver": false,<br>  "tf_docs": false,<br>  "tf_folder": "./"<br>}</pre> | no |
+| <a name="input_add_cd_workflow"></a> [add\_cd\_workflow](#input\_add\_cd\_workflow) | Add cd.yml with the pixle-systems/generate-version-and-release-notes-gh-action step | `any` | <pre>{<br>  "semver": false,<br>  "tf_docs": false,<br>  "tf_folder": "./"<br>}</pre> | no |
 | <a name="input_add_ci_workflow"></a> [add\_ci\_workflow](#input\_add\_ci\_workflow) | Add ci.yml with the checks: conventional-commits, jira-tickets-commits and documentation | `any` | <pre>{<br>  "ensure_conventional_commits": false,<br>  "ensure_documentation": false,<br>  "ensure_jira_tickets": false,<br>  "terraform": {<br>    "tf_folder": "./",<br>    "tf_validate_iac": false,<br>    "tf_validate_security": false<br>  }<br>}</pre> | no |
 | <a name="input_allow_auto_merge"></a> [allow\_auto\_merge](#input\_allow\_auto\_merge) | n/a | `bool` | `false` | no |
 | <a name="input_allow_merge_commit"></a> [allow\_merge\_commit](#input\_allow\_merge\_commit) | only allow squash merge enable by default because it is the only accepted by the release gh action | `bool` | `false` | no |

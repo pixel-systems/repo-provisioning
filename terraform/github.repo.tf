@@ -15,7 +15,7 @@ resource "github_repository" "default" {
   allow_auto_merge   = var.allow_auto_merge
 
   # VULNERABILITY ALERTS ARE NOT ACCESSIBLE BY PAT - GithubApp needs to be used
-  # vulnerability_alerts = var.vulnerability_alerts 
+  vulnerability_alerts = var.vulnerability_alerts 
 
   delete_branch_on_merge = var.delete_branch_on_merge
   archive_on_destroy     = var.archive_on_destroy

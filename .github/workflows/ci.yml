@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 env:
-  GITHUB_TOKEN: ${{ secrets.TERRAFORM_GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.CICD_GITHUB_REPOSITORY_TOKEN }} ## !!! DO NOT RENAME AS IS USED TO AUTHENTICAT GITHUB TFM PROVIDER 
 
   PIXEL_CORE_AWS_ACCESS_KEY_ID: ${{ secrets.PIXEL_CORE_GITHUB_AWS_ACCESS_KEY_ID }}
   PIXEL_CORE_AWS_SECRET_ACCESS_KEY: ${{ secrets.PIXEL_CORE_GITHUB_AWS_SECRET_ACCESS_KEY }}
@@ -68,6 +68,7 @@ jobs:
     if: needs.get-repos-changed.outputs.repos_modified != 'none'
     strategy:
       matrix: ${{ fromJSON( needs.get-repos-changed.outputs.repos_modified ) }}
+      fail-fast: false
     steps:
       - uses: actions/checkout@v3
   

@@ -1,1 +1,1 @@
-key = "github/repo-provisioning/generate-version-and-release-notes.tfstate"
+key = "github/repo-provisioning/alb-security-policies-report.tfstate"

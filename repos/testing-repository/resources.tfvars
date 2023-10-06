@@ -1,5 +1,5 @@
 name        = "testing-repository"
-description = "description_to_be_fill"
+description = "testing repository for repository provisioning"
 
 branch_protection = {
   strict      = true
